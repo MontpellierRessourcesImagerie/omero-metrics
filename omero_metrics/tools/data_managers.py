@@ -198,7 +198,8 @@ class DatasetManager:
     def load_data(self, load_images: bool, force_reload: bool = False):
         if force_reload or self.mm_dataset is None:
             self.mm_dataset = load.load_dataset(self.omero_dataset, load_images)
-            self.kkm = KKM_MAPPINGS.get(self.mm_dataset.__class__.__name__)
+            if self.mm_dataset is not None:
+                self.kkm = KKM_MAPPINGS.get(self.mm_dataset.__class__.__name__)
         else:
             raise NotImplementedError(
                 "partial loading of data from OMERO is not yet implemented"

@@ -269,6 +269,8 @@ def HarmonizedMetricsDatasetCollection(pm):
     for dataset in pm.mm_dataset_collection.dataset_collection:
         if not dataset.processed:
             raise ValueError(f"Dataset {dataset.name} is not processed")
+        if dataset.output is None:
+            continue
         key_measurements_by_kkm = {
             kkm: [
                 {
@@ -326,5 +328,6 @@ def HarmonizedMetricsDatasetCollection(pm):
         "sample": pm.sample,
         "thresholds": pm.thresholds,
         "kkm": kkm_list,
+        "mm_dataset_collection": pm.mm_dataset_collection,
     }
     pm.context = serialize(context)
