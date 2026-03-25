@@ -369,9 +369,15 @@ def callback_mip(points, channel_index, color, invert, **kwargs):
 
     bead_array = beads_array[bead_index, :, :, :, channel_index]
 
+    # Crop Z to central 50% to reduce whitespace (issue #23)
+    nz = bead_array.shape[0]
+    z_start = nz // 4
+    z_end = 3 * nz // 4
+    bead_array_cropped = bead_array[z_start:z_end, :, :]
+
     mips = {
-        "x": np.flipud(np.transpose(np.max(bead_array, axis=2))),
-        "y": np.max(bead_array, axis=1),
+        "x": np.flipud(np.transpose(np.max(bead_array_cropped, axis=2))),
+        "y": np.max(bead_array_cropped, axis=1),
         "z": np.flipud(np.max(bead_array, axis=0)),
     }
     mips = {a: np.sqrt(mip) for a, mip in mips.items()}
