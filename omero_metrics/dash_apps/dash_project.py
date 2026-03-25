@@ -467,13 +467,11 @@ def update_project_view(clicked_data, page, **kwargs):
                 "key_measurements_by_dataset_id"
             ]
             data = key_measurements_by_dataset_id[str(clicked_data["dataset_id"])]
-            total = math.ceil(len(data["head"]) / 4)
-            start_idx = (page - 1) * 4
-            end_idx = start_idx + 4
+            total = 1
             page_data = {
                 "caption": data["caption"],
-                "head": data["head"][start_idx:end_idx],
-                "body": [i[start_idx:end_idx] for i in data["body"]],
+                "head": data["head"],
+                "body": data["body"],
             }
             return (
                 data["caption"],
@@ -826,25 +824,25 @@ def download_project_data(*args, **kwargs):
             kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
         )
         context = kwargs["session_state"]["context"]
-        mm_datasets = deserialize(context.get("mm_datasets"))
+        mm_dataset_collection = deserialize(context["mm_dataset_collection"])
         file_name = context["project_name"]
         yaml_dumper = YAMLDumper()
         json_dumper = JSONDumper()
         if triggered_id == "download-yaml":
             return dict(
-                content=yaml_dumper.dumps(mm_datasets),
+                content=yaml_dumper.dumps(mm_dataset_collection),
                 filename=f"{file_name}.yaml",
             )
 
         elif triggered_id == "download-json":
             return dict(
-                content=json_dumper.dumps(mm_datasets),
+                content=json_dumper.dumps(mm_dataset_collection),
                 filename=f"{file_name}.json",
             )
 
         elif triggered_id == "download-text":
             return dict(
-                content=yaml_dumper.dumps(mm_datasets),
+                content=yaml_dumper.dumps(mm_dataset_collection),
                 filename=f"{file_name}.txt",
             )
 
