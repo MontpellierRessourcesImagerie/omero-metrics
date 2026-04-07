@@ -1,10 +1,10 @@
 ---
-title: OMERO-metrics Technical doc
+title: omero-metrics Technical doc
 
 ---
 
 
-OMERO-metrics is an omero web app. It was initially generated using the cookiecutter https://github.com/ome/cookiecutter-omero-webapp
+omero-metrics is an omero web app. It was initially generated using the cookiecutter https://github.com/ome/cookiecutter-omero-webapp
 
 For visualization, we are using the help of dash and django-plotly-dash. 
 We are using also microscope-metrics and microscopemetrics-schema developed previously by Julio. 
@@ -40,7 +40,7 @@ Make sure to add the django plotly dash pages to the urls.py file to trigger the
 To run the debug mode and run omero locally using a django test server. 
 
 ```bash
-$ git clone https://github.com/MontpellierRessourcesImagerie/omero-metrics.git
+$ git clone https://github.com/pro-dho/omero-metrics.git
 $ cd omero-metrics
 $ python -m venv my_venv
 $ source my_venv/bin/activate

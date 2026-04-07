@@ -1,5 +1,4 @@
 import math
-from time import sleep
 
 import dash_mantine_components as dmc
 from dash import dcc, dependencies, html, no_update
@@ -16,7 +15,7 @@ from omero_metrics.styles import (
     THEME,
 )
 from omero_metrics.tools import load
-from omero_metrics.tools.serializers import deserialize
+from omero_metrics.tools.serializers import deserialize, deserialize_partial
 
 
 # COMPONENTS
@@ -260,15 +259,13 @@ def register_delete_dataset_callback(app):
         **kwargs,
     ):
         triggered_button = kwargs["callback_context"].triggered[0]["prop_id"]
-        context = deserialize(kwargs["session_state"]["context"])
-        dataset_id = context["mm_dataset"].data_reference.omero_object_id
+        dataset_id = kwargs["session_state"]["context"]["dataset_id"]
         request = kwargs["request"]
         opened = not confirm_delete_modal_opened
         if (
             triggered_button == "confirm-delete-button.n_clicks"
             and delete_data_clicks > 0
         ):
-            sleep(1)
             response_type, response_msg = views.delete_dataset(
                 request, dataset_id=dataset_id
             )
@@ -299,7 +296,9 @@ def register_download_datasets_callback(app):
         triggered_id = (
             kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
         )
-        context = deserialize(kwargs["session_state"]["context"])
+        context = deserialize_partial(
+            kwargs["session_state"]["context"], "mm_dataset"
+        )
         mm_dataset = context["mm_dataset"]
         file_name = mm_dataset.name
         yaml_dumper = YAMLDumper()
@@ -333,15 +332,15 @@ def register_update_kkm_table_callback(app):
     def update_kkm_table_callback(pagination_value, **kwargs):
         try:
             page = int(pagination_value)
-            context = deserialize(kwargs["session_state"]["context"])
-            kkm = context["kkm"]
-            # TODO: review how we process the tables here.
-            table_km = load.get_km_mm_metrics_dataset(
-                mm_dataset=context["mm_dataset"]
+            context = deserialize_partial(
+                kwargs["session_state"]["context"], "key_measurements_df"
             )
+            kkm = kwargs["session_state"]["context"]["kkm"]
+            table_km = context["key_measurements_df"]
             start_idx = (page - 1) * 4
             end_idx = start_idx + 4
             metrics_df = table_km.filter(["channel_name", *kkm])
+            metrics_df = metrics_df.dropna(axis=1, how="all")
             metrics_df = metrics_df.round(3)
             metrics_df.columns = metrics_df.columns.str.replace(
                 "_", " ", regex=True
@@ -379,9 +378,11 @@ def register_download_table_callback(app):
         triggered_id = (
             kwargs["callback_context"].triggered[0]["prop_id"].split(".")[0]
         )
-        context = deserialize(kwargs["session_state"]["context"])
-        table_km = load.get_km_mm_metrics_dataset(mm_dataset=context["mm_dataset"])
-        kkm = context["kkm"]
+        context = deserialize_partial(
+            kwargs["session_state"]["context"], "key_measurements_df"
+        )
+        table_km = context["key_measurements_df"]
+        kkm = kwargs["session_state"]["context"]["kkm"]
         table_kkm = table_km.filter(["channel_name", *kkm])
         table_kkm = table_kkm.round(3)
         table_kkm.columns = table_kkm.columns.str.replace("_", " ").str.title()

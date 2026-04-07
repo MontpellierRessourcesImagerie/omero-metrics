@@ -1,12 +1,17 @@
 services:
 
   database:
-    image: "postgres:12"
+    image: "postgres:16"
     platform: linux/amd64
     environment:
       POSTGRES_USER: omero
       POSTGRES_DB: omero
       POSTGRES_PASSWORD: omero
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U omero"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - omero
     volumes:
@@ -18,7 +23,8 @@ services:
     # This container uses the tag for the latest server release of OMERO 5
     # To upgrade to the next major release, increment the major version number
     depends_on:
-      - database
+      database:
+        condition: service_healthy
     build: test/omero-server
     platform: linux/amd64
     environment:

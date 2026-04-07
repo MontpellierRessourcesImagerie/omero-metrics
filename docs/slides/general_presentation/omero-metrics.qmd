@@ -34,9 +34,9 @@ meets predefined specifications:
    - If performance _issues_ arise
    - When equipment or environment _changes_
 
-# What is *OMERO-metrics*?
+# What is *omero-metrics*?
 
-OMERO-metrics offers a complete solution for monitoring microscope performance.
+omero-metrics offers a complete solution for monitoring microscope performance.
 
 - Built on the trusted MetroloJ-QC experience
 - FAIR data management via OMERO
@@ -50,7 +50,7 @@ OMERO-metrics offers a complete solution for monitoring microscope performance.
 ![](./media/value_cf_work_2.png){.fragment}
 :::
 
-# How is *OMERO-metrics* built?
+# How is *omero-metrics* built?
 
 ![](./media/sw_infrastructure.png)
 
@@ -74,7 +74,7 @@ OMERO-metrics offers a complete solution for monitoring microscope performance.
 :::
 
 ::: {.column width="33%"}
-[![](../media/logo_omero-metrics.png){.hover-img}](https://github.com/MontpellierRessourcesImagerie/omero-metrics){target="_blank"}
+[![](../media/logo_omero-metrics.png){.hover-img}](https://github.com/pro-dho/omero-metrics){target="_blank"}
 
 **omero-metrics**
 :::
@@ -140,7 +140,7 @@ The user will be able to parametrize the analysis defaulting to the parameters d
 
 # 5. Visualize the results
 
-OMERO-metrics provides a dashboard to visualize the results of the analysis at different levels.
+omero-metrics provides a dashboard to visualize the results of the analysis at different levels.
 
 ## 5.1. Group level
 At the group level, the user will be able to see a summary of the status of the microscope.

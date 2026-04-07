@@ -1,4 +1,4 @@
 format:
   revealjs:
-    title: "<span class='flow_big'>OMERO-metrics</span><br>a web tool for monitoring<br>microscope condition"
+    title: "<span class='flow_big'>omero-metrics</span><br>a web tool for monitoring<br>microscope condition"
     subtitle: "<span style='font-size: 0.8em;'>Julio Mateos Langerak</span>"

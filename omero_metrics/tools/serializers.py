@@ -43,7 +43,10 @@ def serialize_dataframe(df: pd.DataFrame) -> Dict[str, Any]:
 
 def deserialize_dataframe(d: Dict[str, Any]) -> pd.DataFrame:
     """Deserialize a dictionary back to a pandas DataFrame."""
-    return pd.DataFrame(**d["data"])
+    split_data = d["data"]
+    if not split_data["data"] and not split_data["columns"]:
+        return pd.DataFrame()
+    return pd.DataFrame(**split_data)
 
 
 def serialize_mm_schema_obj(obj: mm_schema.YAMLRoot) -> Dict[str, Any]:
@@ -112,3 +115,13 @@ def deserialize(obj: Any) -> Any:
         return [deserialize(item) for item in obj]
     else:
         return obj
+
+
+def deserialize_partial(context: dict, *keys: str) -> dict:
+    """Deserialize only the specified keys from a context dict.
+
+    This avoids the cost of recursively deserializing the entire context
+    (which may contain large numpy arrays and mm_schema objects) when
+    a callback only needs a few plain-value keys.
+    """
+    return {k: deserialize(context[k]) for k in keys if k in context}

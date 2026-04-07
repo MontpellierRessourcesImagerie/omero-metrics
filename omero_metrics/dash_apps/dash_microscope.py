@@ -1,18 +1,8 @@
 import dash_mantine_components as dmc
-import pandas as pd
-from dash import dash_table, html
+from dash_iconify import DashIconify
 from django_plotly_dash import DjangoDash
 
-df = pd.DataFrame(
-    {
-        "country": ["Afghanistan", "Albania", "Algeria"],
-        "continent": ["Asia", "Europe", "Africa"],
-        "lifeExp": [43.828, 76.423, 72.301],
-        "pop": [31889923, 3600523, 33333216],
-        "gdpPercap": [974.5803384, 5937.029526, 6223.367465],
-    }
-)
-
+from omero_metrics.styles import MANTINE_THEME, THEME
 
 dashboard_name = "top_iu_microscope"
 dash_app_microscope = DjangoDash(
@@ -20,111 +10,119 @@ dash_app_microscope = DjangoDash(
     serve_locally=True,
 )
 
+
+def _info_card(icon, label, description):
+    return dmc.Paper(
+        p="lg",
+        radius="md",
+        withBorder=True,
+        style={"borderColor": THEME["border_light"]},
+        children=[
+            dmc.Stack(
+                [
+                    dmc.ThemeIcon(
+                        DashIconify(icon=icon, width=22),
+                        size=40,
+                        radius="md",
+                        color="green",
+                        variant="light",
+                    ),
+                    dmc.Text(label, fw=600, size="sm", c=THEME["text"]["primary"]),
+                    dmc.Text(description, size="xs", c=THEME["text"]["muted"]),
+                ],
+                gap="xs",
+            ),
+        ],
+    )
+
+
 dash_app_microscope.layout = dmc.MantineProvider(
-    [
+    theme=MANTINE_THEME,
+    children=[
         dmc.Container(
             [
                 dmc.Stack(
                     [
-                        dmc.Title(
-                            "Microscope Dashboard",
-                            size="h3",
-                            c="#63aa47",
+                        # Hero section
+                        dmc.Paper(
+                            p="xl",
+                            radius="md",
+                            withBorder=True,
                             style={
-                                "margin-top": "20px",
-                                "text-align": "center",
+                                "borderColor": THEME["border_light"],
+                                "borderLeft": f"4px solid {THEME['primary']}",
                             },
-                        ),
-                        html.Hr(),
-                        dmc.Flex(
-                            direction={"base": "column", "sm": "row"},
-                            gap={"base": "sm", "sm": "lg"},
-                            justify={"sm": "flex-start"},
-                            align={"sm": "center"},
-                            style={
-                                "margin-top": "20px",
-                                "margin-bottom": "10px",
-                            },
-                        ),
-                        dmc.Grid(
-                            [
-                                dmc.GridCol(
+                            children=[
+                                dmc.Group(
                                     [
-                                        html.Div(
+                                        dmc.Stack(
                                             [
-                                                dmc.Slider(
-                                                    id="drag-slider",
-                                                    value=26,
-                                                    updatemode="drag",
-                                                    marks=[
-                                                        {
-                                                            "value": 20,
-                                                            "label": "20%",
-                                                        },
-                                                        {
-                                                            "value": 50,
-                                                            "label": "50%",
-                                                        },
-                                                        {
-                                                            "value": 80,
-                                                            "label": "80%",
-                                                        },
+                                                dmc.Group(
+                                                    [
+                                                        dmc.Title(
+                                                            "OMERO Metrics",
+                                                            order=2,
+                                                        ),
+                                                        dmc.Badge(
+                                                            "QC Dashboard",
+                                                            color="green",
+                                                            variant="light",
+                                                            size="md",
+                                                        ),
                                                     ],
-                                                    mb=25,
+                                                    gap="sm",
+                                                ),
+                                                dmc.Text(
+                                                    "Microscopy quality control and performance tracking",
+                                                    c=THEME["text"]["secondary"],
+                                                    size="md",
                                                 ),
                                             ],
-                                            style={
-                                                "background-color": "#3c652a",
-                                                "padding": "10px",
-                                                "border-radius": "0.5rem",
-                                                "margin-bottom": "10px",
-                                                "align": "center",
-                                            },
-                                        ),
-                                        dmc.BarChart(
-                                            h=300,
-                                            dataKey="continent",
-                                            data=df.to_dict(orient="records"),
-                                            series=[
-                                                {
-                                                    "name": "pop",
-                                                    "color": "violet.6",
-                                                },
-                                                {
-                                                    "name": "lifeExp",
-                                                    "color": "blue.6",
-                                                },
-                                                {
-                                                    "name": "gdpPercap",
-                                                    "color": "teal.6",
-                                                },
-                                            ],
-                                            tickLine="y",
-                                            gridAxis="y",
-                                            withXAxis=True,
-                                            withYAxis=True,
+                                            gap="xs",
                                         ),
                                     ],
-                                    span="auto",
-                                ),
-                                dmc.GridCol(
-                                    [
-                                        dash_table.DataTable(
-                                            data=df.to_dict("records"),
-                                            page_size=10,
-                                        )
-                                    ],
-                                    span="auto",
+                                    justify="space-between",
                                 ),
                             ],
-                            justify="space-between",
-                            align="stretch",
                         ),
-                    ]
-                )
+                        # Feature cards
+                        dmc.SimpleGrid(
+                            cols=3,
+                            spacing="md",
+                            children=[
+                                _info_card(
+                                    "tabler:microscope",
+                                    "PSF Beads Analysis",
+                                    "Measure resolution via point spread function bead imaging",
+                                ),
+                                _info_card(
+                                    "tabler:brightness-half",
+                                    "Field Illumination",
+                                    "Assess illumination uniformity across the field of view",
+                                ),
+                                _info_card(
+                                    "tabler:chart-line",
+                                    "Trend Monitoring",
+                                    "Track instrument performance over time across datasets",
+                                ),
+                            ],
+                        ),
+                        # Getting started
+                        dmc.Alert(
+                            "Select a project, dataset, or image from the left panel to begin.",
+                            title="Getting Started",
+                            color="green",
+                            variant="light",
+                            radius="md",
+                            icon=DashIconify(icon="tabler:arrow-left", width=20),
+                        ),
+                    ],
+                    gap="md",
+                ),
             ],
-            style={"background-color": "#e0e0e0"},
-            fluid=True,
+            size="lg",
+            p="lg",
+            style={"backgroundColor": THEME["background"]},
         ),
-    ]
+    ],
 )

@@ -4,7 +4,7 @@ from dash import html
 from django_plotly_dash import DjangoDash
 
 import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
-from omero_metrics.styles import CARD_STYLE1
+from omero_metrics.styles import CARD_STYLE_ELEVATED
 
 # Initialize the Dash app
 dashboard_name = "omero_multiple_projects"
@@ -61,7 +61,7 @@ def kkm_tables_projects(*args, **kwargs):
                     )
                 )
         return dmc.Paper(
-            style={**CARD_STYLE1, "marginTop": "12px"}, children=div_data
+            style={**CARD_STYLE_ELEVATED, "marginTop": "12px"}, children=div_data
         )
     else:
         return [

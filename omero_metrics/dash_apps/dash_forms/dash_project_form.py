@@ -1,5 +1,4 @@
 import traceback
-from time import sleep
 
 import dash
 import dash_mantine_components as dmc
@@ -401,7 +400,6 @@ def save_config_dash(
     request = kwargs["request"]
     if clicked_data > 0 and current == 2:
         if dft.validate_form(sample_form) and dft.validate_form(input_form):
-            sleep(1)
             try:
                 input_parameters = dft.extract_form_data(input_form)
                 mm_input_parameters = mm_input_parameters(**input_parameters)
@@ -413,7 +411,6 @@ def save_config_dash(
                     input_parameters=mm_input_parameters,
                     sample=mm_sample,
                 )
-                sleep(1)
 
                 return my_components.alert_handler(response_type, response_msg)
             except Exception as e:

@@ -1,10 +1,10 @@
-/* Google Font Import - Roboto */
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
+/* Google Font Import */
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600;700&display=swap');
 *{
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Roboto', sans-serif;
+    font-family: 'Source Sans 3', 'Segoe UI', sans-serif;
 }
 .row{
     flex-wrap: nowrap;
@@ -13,16 +13,15 @@
 
 :root{
     /* ===== Colors ===== */
-    --body-color: #E4E9F7;
+    --body-color: #f4f6f5;
     --sidebar-color: #FFF;
-    --primary-color: #3c652a;
-    --primary-color-light: #F6F5FF;
-    --toggle-color: #DDD;
-    --text-color: #707070;
+    --primary-color: #1a7a32;
+    --primary-color-light: #e8f5e9;
+    --toggle-color: #dce4df;
+    --text-color: #5a6b5e;
 
     /* ====== Transition ====== */
     --tran-03: all 0.2s ease;
-    --tran-03: all 0.3s ease;
     --tran-04: all 0.3s ease;
     --tran-05: all 0.3s ease;
 }

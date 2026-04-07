@@ -1,6 +1,6 @@
 import dash
 import dash_mantine_components as dmc
-from dash import html
+from dash import dcc, html
 from django_plotly_dash import DjangoDash
 
 import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components

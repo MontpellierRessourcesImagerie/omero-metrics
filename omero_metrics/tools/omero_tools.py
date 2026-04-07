@@ -36,6 +36,7 @@ from omero.model import (
     ImageI,
     LengthI,
     LineI,
+    LogicalChannelI,
     MaskI,
     OriginalFileI,
     PointI,
@@ -242,10 +243,23 @@ def _label_channels(image: ImageWrapper, labels: list):
         raise ValueError(
             "The length of the channel labels is not of the same size as the size of the c dimension"
         )
+    conn = image._conn
+    seen_lc_ids = {}
     for label, channel in zip(labels, image.getChannels(noRE=True)):
         logical_channel = channel.getLogicalChannel()
-        logical_channel.setName(label)
-        logical_channel.save()
+        lc_id = logical_channel.getId()
+        if lc_id in seen_lc_ids:
+            # This LogicalChannel is shared with another channel.
+            # Create a new unique LogicalChannel to avoid name overwrites.
+            new_lc = LogicalChannelI()
+            new_lc.setName(rstring(label))
+            new_lc = conn.getUpdateService().saveAndReturnObject(new_lc)
+            channel._obj.setLogicalChannel(new_lc)
+            conn.getUpdateService().saveObject(channel._obj)
+        else:
+            seen_lc_ids[lc_id] = True
+            logical_channel.setName(label)
+            logical_channel.save()
 
 
 def _get_image_shape(image: ImageWrapper):
@@ -358,7 +372,7 @@ def get_image_intensities(
         zct_tile_list = [(z, c, t, tile_region) for z, c, t in zct_list]
         np.stack(list(pixels.getTiles(zctTileList=zct_tile_list)), out=intensities)
 
-    intensities = np.reshape(intensities, newshape=output_shape)
+    intensities = np.reshape(intensities, output_shape)
 
     return intensities
 
@@ -585,7 +599,6 @@ def create_image_from_numpy_array(
                 size_t=data.shape[2],
                 channel_list=channels_list,
             )
-
         else:
             new_image = _create_image(
                 conn,
@@ -600,31 +613,34 @@ def create_image_from_numpy_array(
             )
 
         raw_pixel_store = conn.c.sf.createRawPixelsStore()
-        pixels_id = new_image.getPrimaryPixels().getId()
-        raw_pixel_store.setPixelsId(pixels_id, True)
+        try:
+            pixels_id = new_image.getPrimaryPixels().getId()
+            raw_pixel_store.setPixelsId(pixels_id, True)
 
-        for tile_coord in zct_tile_list:
-            tile_data = data[
-                tile_coord[0],
-                tile_coord[1],
-                tile_coord[2],
-                tile_coord[3][1] : tile_coord[3][1] + tile_coord[3][3],
-                tile_coord[3][0] : tile_coord[3][0] + tile_coord[3][2],
-            ]
-            tile_data = tile_data.byteswap()
-            bin_tile_data = tile_data.tostring()
+            for tile_coord in zct_tile_list:
+                tile_data = data[
+                    tile_coord[0],
+                    tile_coord[1],
+                    tile_coord[2],
+                    tile_coord[3][1] : tile_coord[3][1] + tile_coord[3][3],
+                    tile_coord[3][0] : tile_coord[3][0] + tile_coord[3][2],
+                ]
+                tile_data = tile_data.byteswap()
+                raw_pixel_store.setTile(
+                    tile_data.tobytes(),
+                    tile_coord[0],
+                    tile_coord[1],
+                    tile_coord[2],
+                    tile_coord[3][0],
+                    tile_coord[3][1],
+                    tile_coord[3][2],
+                    tile_coord[3][3],
+                    conn.SERVICE_OPTS,
+                )
 
-            raw_pixel_store.setTile(
-                bin_tile_data,
-                tile_coord[0],
-                tile_coord[1],
-                tile_coord[2],
-                tile_coord[3][0],
-                tile_coord[3][1],
-                tile_coord[3][2],
-                tile_coord[3][3],
-                conn.SERVICE_OPTS,
-            )
+            raw_pixel_store.save()
+        finally:
+            raw_pixel_store.close()
 
         if dataset is not None:
             _link_image_to_dataset(conn, new_image, dataset)

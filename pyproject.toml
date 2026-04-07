@@ -1,6 +1,6 @@
 [build-system]
-requires = ["poetry-core>=1.7.0", "poetry-dynamic-versioning"]
-build-backend = "poetry_dynamic_versioning.backend"
+requires = ["poetry-core>=1.7.0"]
+build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "omero-metrics"
@@ -26,12 +26,12 @@ dynamic = [
     "classifiers",
     "dependencies",
 ]
-version = "0.2.3.post74.dev0+208830a"
+version = "0.2.6"
 
 [project.urls]
-homepage = "https://github.com/MontpellierRessourcesImagerie/omero-metrics"
-repository = "https://github.com/MontpellierRessourcesImagerie/omero-metrics"
-documentation = "https://montpellierressourcesimagerie.github.io/omero-metrics/"
+homepage = "https://github.com/pro-dho/omero-metrics"
+repository = "https://github.com/pro-dho/omero-metrics"
+documentation = "https://pro-dho.github.io/omero-metrics/"
 
 [tool.poetry]
 packages = [
@@ -92,22 +92,17 @@ zeroc-ice = [
     { platform = "win32", python = "3.12", url = "https://github.com/glencoesoftware/zeroc-ice-py-win-x86_64/releases/download/20240325/zeroc_ice-3.6.5-cp312-cp312-win_amd64.whl"}
 ]
 
-black = "^25"
+black = {version = "^26", python = ">=3.10"}
 poetry = "^2"
 isort = "^6"
 pre-commit = "^4"
 
-[tool.poetry.requires-plugins]
-poetry-dynamic-versioning = ">=1.5.2"  # current 1.8.2
-
-[tool.poetry-dynamic-versioning]
-enable = false
-vcs = "git"
-style = "pep440"
-#strict = true
 
 [tool.pytest.ini_options]
-DJANGO_SETTINGS_MODULE = "omeroweb.settings"
+# DJANGO_SETTINGS_MODULE is NOT set here — it would force omeroweb.settings
+# to load at pytest startup, which requires OMERODIR (an OMERO server install).
+# CI sets both DJANGO_SETTINGS_MODULE and OMERODIR via environment variables.
+# For local unit tests, use: pytest test/unit/
 python_files = ["tests.py", "test_*.py", "*_tests.py"]
 
 [tool.isort]

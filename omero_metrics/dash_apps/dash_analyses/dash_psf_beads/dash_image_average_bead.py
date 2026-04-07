@@ -3,6 +3,7 @@ import logging
 import dash
 import dash_mantine_components as dmc
 import numpy as np
+import pandas as pd
 import plotly.express as px
 import plotly.graph_objs as go
 from dash import dcc, html
@@ -10,9 +11,9 @@ from django_plotly_dash import DjangoDash
 from plotly.subplots import make_subplots
 
 import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_components
-from omero_metrics.styles import MANTINE_THEME, THEME
+from omero_metrics.styles import MANTINE_THEME, PLOTLY_LAYOUT, THEME
 from omero_metrics.tools import load
-from omero_metrics.tools.serializers import deserialize
+from omero_metrics.tools.serializers import deserialize, deserialize_partial
 
 logger = logging.getLogger(__name__)
 dashboard_name = "omero_image_average_bead"
@@ -194,57 +195,77 @@ omero_image_average_bead.layout = dmc.MantineProvider(
 )
 def update_image(channel_index, color, invert, **kwargs):
     try:
-        context = deserialize(kwargs["session_state"]["context"])
-        mm_dataset = context["mm_dataset"]
-        mm_image = context["mm_image"]
-        image_id = mm_image.data_reference.omero_object_id
+        if channel_index is None:
+            raise dash.exceptions.PreventUpdate
+
+        raw_context = kwargs["session_state"]["context"]
+        ctx = deserialize_partial(
+            raw_context,
+            "mm_image",
+            "mips",
+            "key_measurements_df",
+            "avg_bead_profiles",
+        )
+        voxel_size = raw_context["voxel_size"]
+        kkm = raw_context["kkm"]
         channel_index = int(channel_index)
 
         if invert:
             color = f"{color}_r"
         mip = {
-            "z": context["mips"]["z"][..., channel_index],
-            "y": context["mips"]["y"][..., channel_index],
-            "x": context["mips"]["x"][..., channel_index],
+            "z": ctx["mips"]["z"][..., channel_index],
+            "y": ctx["mips"]["y"][..., channel_index],
+            "x": ctx["mips"]["x"][..., channel_index],
         }
 
-        mm_dataset = context["mm_dataset"]
-        profiles = get_average_bead_profiles(
-            bead_index=0,
-            channel_index=channel_index,
-            image_id=0,
-            mm_dataset=mm_dataset,
-        )
-        voxel_size = {
-            "x": mm_image.voxel_size_x_micron,
-            "y": mm_image.voxel_size_y_micron,
-            "z": mm_image.voxel_size_z_micron,
-        }
+        # Extract average profiles: columns are {img}_{ch}_{bead}_{axis}_{type}
+        # Average raw profiles across all beads for the selected channel
+        profiles = {}
+        for axis in ("x", "y", "z"):
+            df = ctx["avg_bead_profiles"].get(axis)
+            if df is not None and not df.empty:
+                raw_cols = [
+                    c
+                    for c in df.columns
+                    if c.endswith(f"_{axis}_raw") and f"_{channel_index}_" in c
+                ]
+                fitted_cols = [
+                    c
+                    for c in df.columns
+                    if c.endswith(f"_{axis}_fitted_gaussian")
+                    and f"_{channel_index}_" in c
+                ]
 
-        kkm = context["kkm"]
+                profile_df = pd.DataFrame()
+                if raw_cols:
+                    profile_df["raw"] = df[raw_cols].mean(axis=1)
+                if fitted_cols:
+                    profile_df["fitted"] = df[fitted_cols].mean(axis=1)
+                profiles[axis] = profile_df
+            else:
 
-        table_km = load.get_km_mm_metrics_dataset(
-            mm_dataset=deserialize(context["mm_dataset"])
-        )
+                profiles[axis] = pd.DataFrame({"raw": [0], "fitted": [0]})
+        # We flip the values of the profiles in the y-axis
+        profiles["y"] = profiles["y"].iloc[::-1].reset_index(drop=True)
 
-        metrics_df = table_km.filter(["channel_name", *kkm])
+        table_km = ctx["key_measurements_df"]
 
         if all(list(voxel_size.values())):
             fwhms = {
-                "x": metrics_df.iloc[0]["average_bead_fwhm_micron_x"],
-                "y": metrics_df.iloc[0]["average_bead_fwhm_micron_y"],
-                "z": metrics_df.iloc[0]["average_bead_fwhm_micron_z"],
+                "x": table_km.iloc[channel_index]["average_bead_fwhm_micron_x"],
+                "y": table_km.iloc[channel_index]["average_bead_fwhm_micron_y"],
+                "z": table_km.iloc[channel_index]["average_bead_fwhm_micron_z"],
             }
         else:
             fwhms = {
-                "x": metrics_df.iloc[0]["average_bead_fwhm_pixel_x"],
-                "y": metrics_df.iloc[0]["average_bead_fwhm_pixel_y"],
-                "z": metrics_df.iloc[0]["average_bead_fwhm_pixel_z"],
+                "x": table_km.iloc[channel_index]["average_bead_fwhm_pixel_x"],
+                "y": table_km.iloc[channel_index]["average_bead_fwhm_pixel_y"],
+                "z": table_km.iloc[channel_index]["average_bead_fwhm_pixel_z"],
             }
         r_sq = {
-            "x": metrics_df.iloc[0]["average_bead_fit_gaussian_r2_x"],
-            "y": metrics_df.iloc[0]["average_bead_fit_gaussian_r2_y"],
-            "z": metrics_df.iloc[0]["average_bead_fit_gaussian_r2_z"],
+            "x": table_km.iloc[channel_index]["average_bead_fit_gaussian_r2_x"],
+            "y": table_km.iloc[channel_index]["average_bead_fit_gaussian_r2_y"],
+            "z": table_km.iloc[channel_index]["average_bead_fit_gaussian_r2_z"],
         }
 
         axis_lengths = {
@@ -280,8 +301,8 @@ def update_image(channel_index, color, invert, **kwargs):
                 [{"type": "xy"}, {"type": "heatmap"}, {"type": "heatmap"}],
                 [None, {"type": "xy"}, {"type": "xy"}],
             ],
-            horizontal_spacing=0.02,
-            vertical_spacing=0.02,
+            horizontal_spacing=0.05,
+            vertical_spacing=0.05,
         )
         # Add MIP images
         for proj_axis, h_axis, v_axis, row, col, rotate in zip(
@@ -431,24 +452,32 @@ def update_image(channel_index, color, invert, **kwargs):
             )
 
         # Force identical physical domains (prevents doubled Z)
+        fig.update_layout(**PLOTLY_LAYOUT)
         fig.update_layout(
             grid=dict(
                 rows=3,
                 columns=3,
                 pattern="independent",
             ),
-            legend=dict(yanchor="top", y=0.99, xanchor="right", x=0.66),
-            width=800,
-            height=800,
-            autosize=False,
-            margin=dict(l=10, r=10, t=10, b=10),
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                y=-0.05,
+                xanchor="center",
+                x=0.5,
+            ),
+            autosize=True,
+            height=750,
+            margin=dict(l=40, r=10, t=10, b=60),
         )
 
         return fig
 
+    except dash.exceptions.PreventUpdate:
+        raise
     except Exception as e:
-        logger.error(f"Error updating image: {str(e)}")
-        return px.imshow([[0]], title="Error loading image")
+        logger.error(f"Error updating image: {e}", exc_info=True)
+        return px.imshow([[0]], title=f"Error: {str(e)}")
 
 
 @omero_image_average_bead.expanded_callback(
@@ -457,24 +486,15 @@ def update_image(channel_index, color, invert, **kwargs):
     [dash.dependencies.Input("blank-input", "children")],
 )
 def update_channels_average_image(_, **kwargs):
-    context = deserialize(kwargs["session_state"]["context"])
-    channel_series = context["mm_image"].channel_series
+    ctx = deserialize_partial(kwargs["session_state"]["context"], "mm_image")
+    channel_series = ctx["mm_image"].channel_series
     return [
         {"label": c.name, "value": str(i)}
         for i, c in enumerate(channel_series.channels)
     ], "0"
 
 
-@omero_image_average_bead.expanded_callback(
-    dash.dependencies.Output("mip_image", "figure"),
-    [
-        dash.dependencies.Input("average_image_graph", "clickData"),
-        dash.dependencies.Input("channel_selector_average_image", "value"),
-    ],
-    prevent_initial_call=True,
-)
-def get_average_bead_profiles(bead_index, channel_index, image_id, mm_dataset):
-    # bead_index and image_is are not used.
+def get_average_bead_profiles(channel_index, mm_dataset):
     profiles = {
         axis: load.load_table_mm_metrics(mm_dataset.output[f"bead_profiles_{axis}"])
         for axis in ("x", "y", "z")

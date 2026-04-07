@@ -1,6 +1,6 @@
 
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/MontpellierRessourcesImagerie/omero-metrics/omero_plugin.yml)
-![GitHub License](https://img.shields.io/github/license/MontpellierRessourcesImagerie/omero-metrics)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/pro-dho/omero-metrics/omero_plugin.yml)
+![GitHub License](https://img.shields.io/github/license/pro-dho/omero-metrics)
 
 <img alt="omero-metrics logo" height="100" src="omero_metrics/static/omero_metrics/images/metrics_logo.png"/>
 
@@ -23,7 +23,7 @@ Install docker and docker-compose on your computer following the instructions on
 
 Clone the repository:
 ```bash
-git clone https://github.com/MontpellierRessourcesImagerie/omero-metrics.git
+git clone https://github.com/pro-dho/omero-metrics.git
 cd omero-metrics
 ```
 
@@ -83,7 +83,7 @@ poetry config virtualenvs.in-project true
 
 Then, install the package in development mode:
 ```bash
-git clone https://github.com/MontpellierRessourcesImagerie/omero-metrics.git
+git clone https://github.com/pro-dho/omero-metrics.git
 cd omero-metrics
 poetry install
 ```

@@ -42,6 +42,11 @@ def center_viewer_image(request, image_id, conn=None, **kwargs):
     dash_context = request.session.get("django_plotly_dash", dict())
     try:
         image_wrapper = conn.getObject("Image", image_id)
+        if image_wrapper is None:
+            raise ValueError(
+                f"Image {image_id} not found. "
+                "Check that you are in the correct group."
+            )
         im = data_managers.ImageManager(conn, image_wrapper)
         im.load_context()
         dash_context["context"] = im.context
@@ -139,8 +144,8 @@ def center_viewer_group(request, conn=None, **kwargs):
             "group_id": active_group,
             "group_name": group_name,
             "group_description": group_description,
-            "file_ann": file_ann,
-            "map_ann": map_ann,
+            "file_ann": file_ann.to_json(date_format="iso"),
+            "map_ann": map_ann.to_json(date_format="iso"),
         }
         dash_context["context"] = context
         request.session["django_plotly_dash"] = dash_context

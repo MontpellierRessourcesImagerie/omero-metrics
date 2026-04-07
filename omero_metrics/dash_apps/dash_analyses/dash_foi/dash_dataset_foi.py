@@ -18,8 +18,7 @@ from omero_metrics.styles import (
     PLOT_LAYOUT,
     THEME,
 )
-from omero_metrics.tools import load
-from omero_metrics.tools.serializers import deserialize
+from omero_metrics.tools.serializers import deserialize_partial
 
 dashboard_name = "omero_dataset_foi"
 omero_dataset_foi = DjangoDash(
@@ -201,7 +200,8 @@ def update_dropdown_menu(*args, **kwargs):
 def update_intensity_map(channel, **kwargs):
     try:
         channel = int(channel)
-        images = deserialize(kwargs["session_state"]["context"])["image_data"]
+        ctx = deserialize_partial(kwargs["session_state"]["context"], "image_data")
+        images = ctx["image_data"]
         image = images[channel]
         image_channel = image[0, 0, :, :]
         image_channel = rescale_intensity(
@@ -252,21 +252,21 @@ def update_intensity_map(channel, **kwargs):
 )
 def update_profile_type(channel, curve_type, **kwargs):
     try:
-        df_intensity_profiles = load.load_table_mm_metrics(
-            deserialize(kwargs["session_state"]["context"]["mm_dataset"]).output[
-                "intensity_profiles"
-            ]
+        ctx = deserialize_partial(
+            kwargs["session_state"]["context"], "intensity_profiles"
         )
+        df_intensity_profiles = ctx["intensity_profiles"]
 
         df_profile = df_intensity_profiles.filter(regex=f"ch0*{channel}_")
         df_profile.columns = (
             df_profile.columns.str.replace(
-                "ch\d+_leftTop_to_rightBottom", "Diagonal (↘)", regex=True
+                r"ch\d+_leftTop_to_rightBottom", "Diagonal (↘)", regex=True
             )
-            .str.replace("ch\d+_leftBottom_to_rightTop", "Diagonal (↗)", regex=True)
-            .str.replace("ch\d+_center_horizontal", "Horizontal (→)", regex=True)
-            .str.replace("ch\d+_center_vertical", "Vertical (↓)", regex=True)
+            .str.replace(r"ch\d+_leftBottom_to_rightTop", "Diagonal (↗)", regex=True)
+            .str.replace(r"ch\d+_center_horizontal", "Horizontal (→)", regex=True)
+            .str.replace(r"ch\d+_center_vertical", "Vertical (↓)", regex=True)
         )
+        df_profile.insert(0, "Pixel", range(len(df_profile)))
         return df_profile.to_dict("records"), curve_type
 
     except Exception as e:

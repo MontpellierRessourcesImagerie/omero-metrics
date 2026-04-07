@@ -1,246 +1,238 @@
+# =============================================================================
+# OMERO-Metrics Design System
+# Aesthetic: "Lab Precision" — scientific clarity with warm natural tones
+# =============================================================================
+
 THEME = {
-    "primary": "#189A35",
-    "primary_light": "#1FB344",
-    "secondary": "#63aa47",
-    "accent": "#14b8a6",
-    "background": "#ffffff",
-    "surface": "#f8f9fa",
-    "border": "#e9ecef",
+    "primary": "#1a7a32",
+    "primary_light": "#e8f5e9",
+    "primary_hover": "#15632a",
+    "secondary": "#5c8a4d",
+    "accent": "#0d9488",
+    "background": "#fafbfc",
+    "surface": "#ffffff",
+    "surface_dim": "#f4f6f5",
+    "border": "#dce4df",
+    "border_light": "#e8ede9",
     "text": {
-        "primary": "#2C3E50",
-        "secondary": "#6c757d",
+        "primary": "#1a2b1e",
+        "secondary": "#5a6b5e",
+        "muted": "#8a9b8e",
     },
-    "error": "#ef4444",
-    "warning": "#f59e0b",
-    "success": "#10B981",
+    "error": "#c53030",
+    "warning": "#d69e2e",
+    "success": "#1a7a32",
 }
 
+# Channel colors — vibrant, distinguishable under microscopy conventions
+COLORS_CHANNELS = ["#e53e3e", "#38a169", "#3182ce", "#d69e2e"]
+
+# =============================================================================
+# Tab styling
+# =============================================================================
 
 TAB_STYLES = {
     "tab": {
-        "fontSize": "14px",
-        "fontWeight": 500,
-        "height": "40px",
-        "borderRadiusBottom": "6px",
-        "backgroundColor": "white",
+        "fontSize": "13px",
+        "fontWeight": 600,
+        "height": "38px",
+        "borderRadius": "6px",
+        "transition": "all 0.15s ease",
         "&[data-active]": {
-            "backgroundColor": "#e2ffe2",
+            "backgroundColor": THEME["primary_light"],
             "color": THEME["primary"],
+            "fontWeight": 700,
         },
     }
 }
 
 TAB_ITEM_STYLE = {
-    "fontSize": "1.1rem",
-    "fontWeight": "bold",
-    "color": THEME["primary"],
-    "backgroundColor": THEME["surface"],
+    "fontSize": "13px",
+    "fontWeight": 600,
+    "color": THEME["text"]["secondary"],
     "&[data-active]": {
-        "backgroundColor": "#e2ffe2",
+        "backgroundColor": THEME["primary_light"],
         "color": THEME["primary"],
     },
 }
 
+# =============================================================================
+# Input and form styling
+# =============================================================================
 
 INPUT_STYLES = {
     "rightSection": {"pointerEvents": "none"},
-    "item": {"fontSize": "14px"},
-    "input": {"borderColor": THEME["primary"]},
-    "label": {"marginBottom": "8px"},
+    "item": {"fontSize": "13px"},
+    "input": {
+        "borderColor": THEME["border"],
+        "borderRadius": "6px",
+        "&:focus": {"borderColor": THEME["primary"]},
+    },
+    "label": {"marginBottom": "6px", "fontWeight": 500, "fontSize": "13px"},
 }
-
-TABLE_MANTINE_STYLE = {
-    "width": "98%",
-    "height": "auto",
-    "margin": "5px",
-    "borderRadius": "0.5rem",
-    "align": "center",
-}
-TABLE_STYLE = {
-    "overflowX": "auto",
-    "borderRadius": "0.5rem",
-    "fontFamily": "'Arial', 'Helvetica', sans-serif",
-    "borderCollapse": "collapse",
-    "boxShadow": "0 4px 8px rgba(0, 0, 0, 0.1)",
-    "margin": "20px 0",
-    "borderLeft": "none",
-    "borderRight": "none",
-}
-
-TABLE_CELL_STYLE = {
-    "whiteSpace": "normal",
-    "height": "30px",
-    "minWidth": "100px",
-    "width": "100px",
-    "maxWidth": "100px",
-    "textAlign": "left",
-    "textOverflow": "ellipsis",
-    "fontSize": "12px",
-    "fontFamily": "'Arial', 'Helvetica', sans-serif",
-    "color": "#333",
-    "fontWeight": "500",
-    "padding": "10px",
-    "border": "1px solid #ddd",
-    "borderLeft": "none",
-    "borderRight": "none",
-}
-
-TABLE_HEADER_STYLE = {
-    "backgroundColor": THEME["primary"],
-    "fontWeight": "bold",
-    "fontSize": "16px",
-    "paddingTop": "12px",
-    "paddingBottom": "12px",
-    "color": THEME["surface"],
-    "border": "1px solid #ddd",
-    "borderLeft": "none",
-    "borderRight": "none",
-}
-
-STYLE_DATA_CONDITIONAL = (
-    [
-        {
-            "if": {"row_index": "odd"},
-            "backgroundColor": THEME["background"],
-        },
-        {
-            "if": {"row_index": "even"},
-            "backgroundColor": THEME["surface"],
-        },
-    ],
-)
-
-PAPER_STYLE = {
-    "width": "100%",
-    "maxWidth": "600px",
-    "margin": "auto",
-}
-
-FIELDSET_STYLE = {
-    "padding": "10px",
-    "margin": "10px",
-}
-
 
 INPUT_BASE_STYLES = {
-    "wrapper": {
-        "height": "40px",
-    },
+    "wrapper": {"height": "36px"},
     "input": {
-        "height": "40px",
-        "minHeight": "40px",
-        "lineHeight": "40px",  # Match height for vertical centering
-        "padding": "0 12px",  # Consistent padding
+        "height": "36px",
+        "minHeight": "36px",
+        "lineHeight": "36px",
+        "padding": "0 12px",
         "display": "flex",
-        "alignItems": "center",  # Center content vertically
-        "borderColor": THEME["primary"],
-        "fontSize": "14px",
+        "alignItems": "center",
+        "borderColor": THEME["border"],
+        "borderRadius": "6px",
+        "fontSize": "13px",
+        "transition": "border-color 0.15s ease",
+        "&:focus": {"borderColor": THEME["primary"]},
     },
     "rightSection": {
         "pointerEvents": "none",
-        "height": "40px",
+        "height": "36px",
         "display": "flex",
-        "alignItems": "center",  # Center icons vertically
+        "alignItems": "center",
     },
     "leftSection": {
-        "height": "40px",
+        "height": "36px",
         "display": "flex",
-        "alignItems": "center",  # Center icons vertically
+        "alignItems": "center",
     },
     "label": {
-        "marginBottom": "8px",
-        "fontSize": "14px",
+        "marginBottom": "6px",
+        "fontSize": "13px",
         "fontWeight": 500,
+        "color": THEME["text"]["primary"],
     },
-    "item": {
-        "fontSize": "14px",
-    },
+    "item": {"fontSize": "13px"},
 }
 
 SELECT_STYLES = {
     **INPUT_BASE_STYLES,
     "dropdown": {
-        "borderRadius": "6px",
+        "borderRadius": "8px",
         "border": f'1px solid {THEME["border"]}',
+        "boxShadow": "0 4px 12px rgba(0, 0, 0, 0.08)",
     },
     "input": {
         **INPUT_BASE_STYLES["input"],
-        "paddingLeft": "36px",  # Adjust for icon
+        "paddingLeft": "36px",
     },
 }
-
-COLORS_CHANNELS = ["#FF0000", "#00FF00", "#0000FF", "#FFFF00"]
-
 
 DATEPICKER_STYLES = {
     **INPUT_BASE_STYLES,
     "calendar": {
-        "borderRadius": "6px",
+        "borderRadius": "8px",
         "border": f'1px solid {THEME["border"]}',
     },
     "input": {
         **INPUT_BASE_STYLES["input"],
-        "paddingLeft": "36px",  # Adjust for icon
+        "paddingLeft": "36px",
     },
 }
 
-CARD_STYLE = {
-    "backgroundColor": THEME["surface"],
+# =============================================================================
+# Table styling
+# =============================================================================
+
+TABLE_MANTINE_STYLE = {
+    "width": "100%",
+    "height": "auto",
     "borderRadius": "8px",
-    "border": f'1px solid {THEME["border"]}',
-    "padding": "24px",
-    "height": "100%",
-    "boxShadow": "0 1px 3px 0 rgb(0 0 0 / 0.1)",
+    "overflow": "hidden",
 }
 
-CARD_STYLE1 = {
-    "backgroundColor": "white",
+TABLE_STYLE = {
+    "overflowX": "auto",
     "borderRadius": "8px",
-    "border": f'1px solid {THEME["border"]}',
-    "padding": "24px",
+    "fontFamily": "inherit",
+    "borderCollapse": "collapse",
+    "boxShadow": "0 1px 3px rgba(0, 0, 0, 0.06)",
+    "margin": "0",
+}
+
+TABLE_CELL_STYLE = {
+    "whiteSpace": "normal",
+    "height": "36px",
+    "minWidth": "90px",
+    "width": "100px",
+    "maxWidth": "140px",
+    "textAlign": "left",
+    "textOverflow": "ellipsis",
+    "fontSize": "12px",
+    "color": THEME["text"]["primary"],
+    "fontWeight": "400",
+    "padding": "8px 12px",
+    "borderBottom": f'1px solid {THEME["border_light"]}',
+}
+
+TABLE_HEADER_STYLE = {
+    "backgroundColor": THEME["primary"],
+    "fontWeight": "600",
+    "fontSize": "12px",
+    "letterSpacing": "0.02em",
+    "textTransform": "uppercase",
+    "padding": "10px 12px",
+    "color": "white",
+    "borderBottom": "none",
+}
+
+STYLE_DATA_CONDITIONAL = [
+    {
+        "if": {"row_index": "odd"},
+        "backgroundColor": THEME["surface"],
+    },
+    {
+        "if": {"row_index": "even"},
+        "backgroundColor": THEME["surface_dim"],
+    },
+]
+
+# =============================================================================
+# Layout styling
+# =============================================================================
+
+PAPER_STYLE = {
+    "width": "100%",
+    "maxWidth": "100%",
+    "margin": "auto",
+}
+
+FIELDSET_STYLE = {
+    "padding": "12px",
+    "margin": "8px",
+}
+
+CARD_STYLE_ELEVATED = {
+    "backgroundColor": THEME["surface"],
+    "borderRadius": "10px",
+    "border": f'1px solid {THEME["border_light"]}',
+    "padding": "20px",
     "height": "100%",
-    "boxShadow": "0 1px 3px 0 rgb(0 0 0 / 0.1)",
+    "boxShadow": "0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06)",
 }
 
 BUTTON_STYLE = {
     "backgroundColor": THEME["primary"],
     "color": "white",
-    "fontSize": "14px",
-    "fontWeight": 500,
-    "height": "40px",
+    "fontSize": "13px",
+    "fontWeight": 600,
+    "height": "36px",
     "padding": "0 16px",
     "borderRadius": "6px",
 }
 
-MANTINE_THEME = {
-    "colorScheme": "light",
-    "primaryColor": "green",
-    "components": {
-        "Button": {"styles": {"root": {"fontWeight": 500}}},
-        "Select": {"styles": SELECT_STYLES},
-        "DatePicker": {"styles": DATEPICKER_STYLES},
-        "Input": {"styles": INPUT_STYLES},
-        "Paper": {"defaultProps": {"withBorder": True}},
-        "Card": {
-            "styles": {"root": {"borderRadius": "8px"}},
-        },
-        "Title": {"styles": {"root": {"letterSpacing": "-0.5px"}}},
-        "Alert": {"styles": {"root": {"borderRadius": "8px"}}},
-    },
-}
-
-
 CONTAINER_STYLE = {
-    "backgroundColor": THEME["surface"],
-    "margin": "10px",
-    "borderRadius": "0.5rem",
-    "padding": "10px",
+    "backgroundColor": THEME["background"],
+    "borderRadius": "10px",
+    "padding": "16px",
 }
 
 HEADER_PAPER_STYLE = {
-    "shadow": "sm",
-    "p": "md",
-    "mb": "md",
+    "shadow": "xs",
+    "p": "lg",
+    "mb": "lg",
+    "radius": "md",
 }
 
 CONTENT_PAPER_STYLE = {
@@ -254,20 +246,119 @@ GRAPH_STYLE = {
     "height": "300px",
 }
 
+# =============================================================================
+# Mantine theme configuration
+# =============================================================================
+
+MANTINE_THEME = {
+    "colorScheme": "light",
+    "primaryColor": "green",
+    "fontFamily": "'Source Sans 3', 'Segoe UI', sans-serif",
+    "headings": {
+        "fontFamily": "'Source Sans 3', 'Segoe UI', sans-serif",
+        "fontWeight": "700",
+    },
+    "components": {
+        "Button": {
+            "styles": {
+                "root": {
+                    "fontWeight": 600,
+                    "borderRadius": "6px",
+                    "fontSize": "13px",
+                }
+            }
+        },
+        "Select": {"styles": SELECT_STYLES},
+        "DatePicker": {"styles": DATEPICKER_STYLES},
+        "Input": {"styles": INPUT_STYLES},
+        "Paper": {
+            "defaultProps": {"withBorder": True},
+            "styles": {
+                "root": {
+                    "borderColor": THEME["border_light"],
+                    "borderRadius": "10px",
+                }
+            },
+        },
+        "Card": {"styles": {"root": {"borderRadius": "10px"}}},
+        "Title": {
+            "styles": {
+                "root": {
+                    "letterSpacing": "-0.02em",
+                    "color": THEME["text"]["primary"],
+                }
+            }
+        },
+        "Alert": {"styles": {"root": {"borderRadius": "8px"}}},
+        "Badge": {
+            "styles": {
+                "root": {
+                    "fontWeight": 600,
+                    "fontSize": "11px",
+                    "letterSpacing": "0.02em",
+                    "textTransform": "uppercase",
+                }
+            }
+        },
+        "Table": {
+            "styles": {
+                "thead": {"backgroundColor": THEME["surface_dim"]},
+                "th": {
+                    "fontSize": "12px",
+                    "fontWeight": 600,
+                    "color": THEME["text"]["secondary"],
+                    "textTransform": "uppercase",
+                    "letterSpacing": "0.03em",
+                    "padding": "10px 12px",
+                },
+                "td": {
+                    "fontSize": "13px",
+                    "padding": "8px 12px",
+                    "color": THEME["text"]["primary"],
+                },
+            }
+        },
+        "Tabs": {"styles": TAB_STYLES},
+    },
+}
+
+# =============================================================================
+# Chart / Plotly layout
+# =============================================================================
+
 PLOT_LAYOUT = {
     "margin": dict(l=40, r=40, t=40, b=40),
-    "plot_bgcolor": THEME["background"],
-    "paper_bgcolor": THEME["background"],
+    "plot_bgcolor": THEME["surface"],
+    "paper_bgcolor": THEME["surface"],
     "xaxis_showgrid": False,
     "yaxis_showgrid": False,
     "xaxis_zeroline": False,
     "yaxis_zeroline": False,
 }
 
+PLOTLY_LAYOUT = {
+    "margin": dict(l=32, r=32, t=32, b=32),
+    "plot_bgcolor": "rgba(0,0,0,0)",
+    "paper_bgcolor": "rgba(0,0,0,0)",
+    "font": dict(
+        family="'Source Sans 3', sans-serif",
+        size=12,
+        color=THEME["text"]["secondary"],
+    ),
+    "xaxis": dict(showgrid=False, zeroline=False),
+    "yaxis": dict(showgrid=False, zeroline=False),
+    "coloraxis_colorbar": dict(
+        thickness=12,
+        len=0.65,
+        title=dict(side="right", font=dict(size=11)),
+        tickfont=dict(size=10),
+        outlinewidth=0,
+    ),
+}
 
 LINE_CHART_SERIES = [
-    {"name": "Diagonal (↘)", "color": "violet.9"},
-    {"name": "Diagonal (↗)", "color": "blue.9"},
-    {"name": "Horizontal (→)", "color": "pink.9"},
-    {"name": "Vertical (↓)", "color": "teal.9"},
+    {"name": "Diagonal (\u2198)", "color": "violet.7"},
+    {"name": "Diagonal (\u2197)", "color": "blue.7"},
+    {"name": "Horizontal (\u2192)", "color": "pink.7"},
+    {"name": "Vertical (\u2193)", "color": "teal.7"},
 ]

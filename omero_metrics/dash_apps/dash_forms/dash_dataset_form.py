@@ -1,5 +1,4 @@
 import traceback
-from time import sleep
 
 import dash
 import dash_mantine_components as dmc
@@ -402,7 +401,6 @@ dash_form_dataset.clientside_callback(
 def run_analysis(_, list_images, current, comment, **kwargs):
     dataset_id = kwargs["session_state"]["context"]["dataset_id"]
     if current == 2:
-        sleep(1)
         input_parameters = kwargs["session_state"]["context"]["input_parameters"][
             "input_parameters"
         ]

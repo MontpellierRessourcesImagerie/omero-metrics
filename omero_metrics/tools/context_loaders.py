@@ -21,30 +21,70 @@ def concatenate_images(images: list):
     return list_images, list_channels
 
 
+def _precompute_intensity_profiles(mm_dataset, image_index=None):
+    """Pre-compute intensity profile DataFrames from mm_dataset output.
+
+    If image_index is given, return the single image's DataFrame.
+    Otherwise, return the concatenated DataFrame for all images.
+    """
+    ip = mm_dataset.output["intensity_profiles"]
+    if image_index is not None and isinstance(ip, list):
+        return load.load_table_mm_metrics(ip[image_index])
+    return load.load_table_mm_metrics(ip)
+
+
+def _precompute_key_measurements(mm_dataset):
+    """Pre-compute key measurements DataFrame from mm_dataset output."""
+    return load.get_km_mm_metrics_dataset(mm_dataset)
+
+
+def _extract_dataset_meta(mm_dataset):
+    """Extract lightweight metadata from mm_dataset for delete/download."""
+    return {
+        "dataset_id": int(mm_dataset.data_reference.omero_object_id),
+        "dataset_name": mm_dataset.name,
+        "dataset_class": mm_dataset.class_name,
+    }
+
+
 ## Image context loaders
 def FieldIlluminationDataset_input_data_Image(im):
     im.mm_image = load.load_image(im.omero_image, load_array=True)
+    mm_dataset = im.dataset_manager.mm_dataset
+    image_id = im.mm_image.data_reference.omero_object_id
+
+    # Pre-compute ROIs (expensive, but static — no need to redo per callback)
+    rois = load.get_rois_mm_dataset(mm_dataset)
+    image_rois = rois.get(
+        image_id, {"roi": {"Line": [], "Rectangle": [], "Point": []}}
+    )
+
+    # Pre-compute intensity profiles for this image
+    image_ip = _precompute_intensity_profiles(mm_dataset, image_index=im.image_index)
+
     context = {
         "image_index": im.image_index,
         "mm_image": im.mm_image,
-        "mm_dataset": im.dataset_manager.mm_dataset,
+        "rois_lines": image_rois["roi"]["Line"],
+        "rois_rectangles": image_rois["roi"]["Rectangle"],
+        "rois_points": image_rois["roi"]["Point"],
+        "intensity_profiles": image_ip,
     }
     im.context = serialize(context)
 
 
 def PSFBeadsDataset_input_data_Image(im):
     im.mm_image = load.load_image(im.omero_image, load_array=True)
-    mip_z = np.max(im.mm_image.array_data[0, ...], axis=0)
+    mm_dataset = im.dataset_manager.mm_dataset
     bead_properties = load.load_table_mm_metrics(
-        im.dataset_manager.mm_dataset.output["bead_properties"]
+        mm_dataset.output["bead_properties"]
     )
     image_bead_properties = bead_properties.loc[
         bead_properties["image_id"] == im.omero_image.getId()
     ]
     # TODO: This is a hack. We just reproduce what microscope-metrics does to extract the min-distance
     min_distance_px = int(
-        im.dataset_manager.mm_dataset.input_parameters.min_lateral_distance_factor
-        * 2
+        mm_dataset.input_parameters.min_lateral_distance_factor * 2
     )
     half_min_distance_px = min_distance_px // 2
     beads_array = np.zeros(
@@ -75,7 +115,6 @@ def PSFBeadsDataset_input_data_Image(im):
         if bead_array.shape == beads_array[row.bead_id].shape:
             beads_array[row.bead_id] = bead_array
         else:
-            # The bead was close to the edge of the image, so we need to blow it to size
             y_padding = (
                 abs(y_left) if y_left < 0 else 0,
                 (
@@ -96,14 +135,27 @@ def PSFBeadsDataset_input_data_Image(im):
                 bead_array, ((0, 0), y_padding, x_padding, (0, 0))
             )
 
+    mip_z = np.max(im.mm_image.array_data[0, ...], axis=0)
     im.mm_image.array_data = None
+
+    # Pre-compute bead profiles for each axis
+    bead_profiles = {}
+    for axis in ("x", "y", "z"):
+        try:
+            table = mm_dataset.output[f"bead_profiles_{axis}"]
+            if table:
+                bead_profiles[axis] = load.load_table_mm_metrics(table)
+        except (KeyError, AttributeError):
+            pass
+
     context = {
         "image_index": im.image_index,
         "mm_image": im.mm_image,
-        "mm_dataset": im.dataset_manager.mm_dataset,
+        "mm_dataset": mm_dataset,
         "mip_z": mip_z,
         "beads_properties": image_bead_properties,
         "beads_array": beads_array,
+        "bead_profiles": bead_profiles,
     }
     im.context = serialize(context)
 
@@ -120,12 +172,33 @@ def PSFBeadsDataset_output_AveragePSF(im):
     }
     mips = {a: np.sqrt(mip) for a, mip in mips.items()}
 
+    im.mm_image.array_data = None
+    mm_dataset = im.dataset_manager.mm_dataset
+
+    # Pre-compute key measurements and average bead profiles
+    key_measurements_df = _precompute_key_measurements(mm_dataset)
+
+    avg_bead_profiles = {}
+    for axis in ("x", "y", "z"):
+        try:
+            table = mm_dataset.output[f"bead_profiles_{axis}"]
+            if table:
+                avg_bead_profiles[axis] = load.load_table_mm_metrics(table)
+        except (KeyError, AttributeError):
+            pass
+
     context = {
         "image_index": im.image_index,
         "mm_image": im.mm_image,
-        "mm_dataset": im.dataset_manager.mm_dataset,
         "mips": mips,
         "kkm": im.dataset_manager.kkm,
+        "key_measurements_df": key_measurements_df,
+        "avg_bead_profiles": avg_bead_profiles,
+        "voxel_size": {
+            "x": im.mm_image.voxel_size_x_micron,
+            "y": im.mm_image.voxel_size_y_micron,
+            "z": im.mm_image.voxel_size_z_micron,
+        },
     }
     im.context = serialize(context)
 
@@ -136,20 +209,34 @@ def FieldIlluminationDataset(dm):
     list_images, list_channels = concatenate_images(
         dm.mm_dataset.input_data.field_illumination_images
     )
+
+    # Pre-compute tables once (avoid re-computing in every callback)
+    key_measurements_df = _precompute_key_measurements(dm.mm_dataset)
+    intensity_profiles = _precompute_intensity_profiles(dm.mm_dataset)
+
     context = {
+        **_extract_dataset_meta(dm.mm_dataset),
         "mm_dataset": dm.mm_dataset,
         "image_data": list_images,
         "channel_names": list_channels,
         "kkm": dm.kkm,
+        "key_measurements_df": key_measurements_df,
+        "intensity_profiles": intensity_profiles,
     }
     dm.context = serialize(context)
 
 
 def PSFBeadsDataset(dm):
     dm.load_data(load_images=False, force_reload=True)
+
+    # Pre-compute key measurements once
+    key_measurements_df = _precompute_key_measurements(dm.mm_dataset)
+
     context = {
+        **_extract_dataset_meta(dm.mm_dataset),
         "mm_dataset": dm.mm_dataset,
         "kkm": dm.kkm,
+        "key_measurements_df": key_measurements_df,
     }
     dm.context = serialize(context)
 
@@ -181,13 +268,12 @@ def HarmonizedMetricsDatasetCollection(pm):
     collection_key_measurements_by_dataset_id = {}
     for dataset in pm.mm_dataset_collection.dataset_collection:
         if not dataset.processed:
-            # In principle, omero-metrics is generating and processing datasets in one go, so this should never happen
             raise ValueError(f"Dataset {dataset.name} is not processed")
+        if dataset.output is None:
+            continue
         key_measurements_by_kkm = {
             kkm: [
                 {
-                    # TODO: We are removing here time from the date, but this might bite us back at some point
-                    # We should consider keeping time in the date
                     "date": dataset.acquisition_datetime.split("T")[0],
                     "dataset_id": int(dataset.data_reference.omero_object_id),
                     **{
@@ -230,6 +316,7 @@ def HarmonizedMetricsDatasetCollection(pm):
         )
     context = {
         "project_id": int(pm.omero_project.getId()),
+        "project_name": pm.omero_project.getName(),
         "key_measurements_by_kkm": collection_key_measurements_by_kkm,
         "key_measurements_by_dataset_id": collection_key_measurements_by_dataset_id,
         "channels": list(channels),
@@ -241,5 +328,6 @@ def HarmonizedMetricsDatasetCollection(pm):
         "sample": pm.sample,
         "thresholds": pm.thresholds,
         "kkm": kkm_list,
+        "mm_dataset_collection": pm.mm_dataset_collection,
     }
     pm.context = serialize(context)

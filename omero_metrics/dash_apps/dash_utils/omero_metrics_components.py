@@ -207,58 +207,56 @@ delete_button = dmc.Button(
 )
 
 
-def header_component(title, description, tag, load_buttons=True):
+def header_component(title, description, tag, load_buttons=True, context_info=None):
+    title_children = [
+        dmc.Title(title, order=3, c=THEME["text"]["primary"]),
+        dmc.Text(description, c=THEME["text"]["secondary"], size="sm"),
+    ]
+    if context_info:
+        title_children.append(
+            dmc.Text(context_info, size="xs", c=THEME["text"]["muted"])
+        )
+
+    badge = dmc.Badge(
+        tag,
+        color="green",
+        variant="light",
+        size="md",
+        radius="sm",
+    )
+
+    right_section = (
+        dmc.Group(
+            [download_group, delete_button, badge],
+            gap="sm",
+        )
+        if load_buttons
+        else badge
+    )
+
     return dmc.Paper(
         children=[
             dmc.Group(
                 [
                     dmc.Group(
                         [
-                            html.Img(
-                                src="/static/omero_metrics/images/metrics_logo.png",
+                            html.Div(
                                 style={
-                                    "width": "120px",
-                                    "height": "auto",
+                                    "width": "4px",
+                                    "height": "48px",
+                                    "backgroundColor": THEME["primary"],
+                                    "borderRadius": "2px",
+                                    "flexShrink": "0",
                                 },
                             ),
-                            dmc.Stack(
-                                [
-                                    dmc.Title(
-                                        title,
-                                        c=THEME["primary"],
-                                        size="h2",
-                                    ),
-                                    dmc.Text(
-                                        description,
-                                        c=THEME["text"]["secondary"],
-                                        size="sm",
-                                    ),
-                                ],
-                                gap="xs",
-                            ),
+                            dmc.Stack(title_children, gap=4),
                         ],
+                        gap="md",
                     ),
-                    dmc.Group(
-                        [
-                            download_group,
-                            delete_button,
-                            dmc.Badge(
-                                tag,
-                                color=THEME["primary"],
-                                variant="dot",
-                                size="lg",
-                            ),
-                        ]
-                        if load_buttons
-                        else dmc.Badge(
-                            tag,
-                            color=THEME["primary"],
-                            variant="dot",
-                            size="lg",
-                        )
-                    ),
+                    right_section,
                 ],
                 justify="space-between",
+                align="flex-start",
             ),
         ],
         **HEADER_PAPER_STYLE,
@@ -335,3 +333,24 @@ def get_data_trends(kkm, measurement, dates, dfs):
     complete_df = complete_df[complete_df["Measurement"] == kkm[measurement]]
     complete_df = complete_df.drop(columns="Measurement")
     return complete_df
+
+
+def empty_state(
+    icon="material-symbols:info-outline",
+    title="No data available",
+    description="",
+):
+    """Reusable empty/placeholder state component."""
+    children = [
+        get_icon(icon=icon, size=48, color="dimmed"),
+        dmc.Text(title, size="lg", fw=500, c="dimmed", ta="center"),
+    ]
+    if description:
+        children.append(dmc.Text(description, size="sm", c="dimmed", ta="center"))
+    return dmc.Stack(
+        children=children,
+        align="center",
+        justify="center",
+        gap="sm",
+        style={"minHeight": "200px", "padding": "40px"},
+    )

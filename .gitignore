@@ -8,3 +8,5 @@ omerodir
 .hypothesis
 .poetry
 .idea
+var
+uv.lock

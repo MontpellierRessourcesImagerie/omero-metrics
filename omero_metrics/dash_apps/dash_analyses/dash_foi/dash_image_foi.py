@@ -11,10 +11,10 @@ import omero_metrics.dash_apps.dash_utils.omero_metrics_components as my_compone
 from omero_metrics.styles import (
     LINE_CHART_SERIES,
     MANTINE_THEME,
+    PLOTLY_LAYOUT,
     THEME,
 )
-from omero_metrics.tools import load
-from omero_metrics.tools.serializers import deserialize
+from omero_metrics.tools.serializers import deserialize_partial
 
 dashboard_name = "omero_image_foi"
 omero_image_foi = DjangoDash(
@@ -248,7 +248,8 @@ omero_image_foi.layout = dmc.MantineProvider(
     [dash.dependencies.Input("blank-input", "children")],
 )
 def callback_channel(_, **kwargs):
-    mm_image = deserialize(kwargs["session_state"]["context"]["mm_image"])
+    ctx = deserialize_partial(kwargs["session_state"]["context"], "mm_image")
+    mm_image = ctx["mm_image"]
     return [
         {"label": c.name, "value": str(i), "description": f"Channel {i+1}"}
         for i, c in enumerate(mm_image.channel_series.channels)
@@ -266,17 +267,16 @@ def callback_channel(_, **kwargs):
     ],
 )
 def callback_image(channel, color, checked_contour, inverted_color, roi, **kwargs):
-    mm_dataset = deserialize(kwargs["session_state"]["context"]["mm_dataset"])
-    mm_image = deserialize(kwargs["session_state"]["context"]["mm_image"])
-    image_id = mm_image.data_reference.omero_object_id
+    context = kwargs["session_state"]["context"]
+    ctx = deserialize_partial(context, "mm_image")
+    mm_image = ctx["mm_image"]
     if inverted_color:
         color = color + "_r"
     image_data = mm_image.array_data[0, 0, :, :, int(channel)]
     image_data = np.float32(image_data / image_data.max())
-    rois = load.get_rois_mm_dataset(mm_dataset)
-    df_lines = pd.DataFrame(rois[image_id]["roi"]["Line"])
-    df_rects = pd.DataFrame(rois[image_id]["roi"]["Rectangle"])
-    df_points = pd.DataFrame(rois[image_id]["roi"]["Point"])
+    df_lines = pd.DataFrame(context["rois_lines"])
+    df_rects = pd.DataFrame(context["rois_rectangles"])
+    df_points = pd.DataFrame(context["rois_points"])
     df_lines.columns = df_lines.columns.str.upper()
     df_rects.columns = df_rects.columns.str.upper()
     df_points.columns = df_points.columns.str.upper()
@@ -308,18 +308,11 @@ def callback_image(channel, color, checked_contour, inverted_color, roi, **kwarg
         fig.plotly_restyle({"type": "contour"}, 0)
         fig.update_yaxes(autorange="reversed")
 
+    fig.update_layout(**PLOTLY_LAYOUT)
     fig.update_layout(
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
         margin=dict(l=20, r=20, t=20, b=20),
         xaxis=dict(showgrid=False, zeroline=False, visible=False),
         yaxis=dict(showgrid=False, zeroline=False, visible=False),
-        coloraxis_colorbar=dict(
-            thickness=15,
-            len=0.7,
-            title=dict(text="Intensity", side="right"),
-            tickfont=dict(size=10),
-        ),
     )
     corners = [
         dict(
@@ -380,20 +373,21 @@ def callback_image(channel, color, checked_contour, inverted_color, roi, **kwarg
     [dash.dependencies.Input("channel_dropdown", "value")],
 )
 def update_intensity_profiles(channel, **kwargs):
-    image_index = int(kwargs["session_state"]["context"]["image_index"])
-    df_intensity_profiles = load.load_table_mm_metrics(
-        deserialize(kwargs["session_state"]["context"]["mm_dataset"]).output[
-            "intensity_profiles"
-        ][image_index]
-    )
-    df_profile = df_intensity_profiles.filter(regex=f"ch0*{channel}_")
-    df_profile.columns = (
-        df_profile.columns.str.replace(
-            "ch\d+_leftTop_to_rightBottom", "Diagonal (↘)"
+    try:
+        ctx = deserialize_partial(
+            kwargs["session_state"]["context"], "intensity_profiles"
         )
-        .str.replace("ch\d+_leftBottom_to_rightTop", "Diagonal (↗)")
-        .str.replace("ch\d+_center_horizontal", "Horizontal (→)")
-        .str.replace("ch\d+_center_vertical", "Vertical (↓)")
-    )
-
-    return df_profile.to_dict("records")
+        df_intensity_profiles = ctx["intensity_profiles"]
+        df_profile = df_intensity_profiles.filter(regex=f"ch0*{channel}_")
+        df_profile.columns = (
+            df_profile.columns.str.replace(
+                r"ch\d+_leftTop_to_rightBottom", "Diagonal (↘)", regex=True
+            )
+            .str.replace(r"ch\d+_leftBottom_to_rightTop", "Diagonal (↗)", regex=True)
+            .str.replace(r"ch\d+_center_horizontal", "Horizontal (→)", regex=True)
+            .str.replace(r"ch\d+_center_vertical", "Vertical (↓)", regex=True)
+        )
+        df_profile.insert(0, "Pixel", range(len(df_profile)))
+        return df_profile.to_dict("records")
+    except Exception as e:
+        return [{"Pixel": 0}]

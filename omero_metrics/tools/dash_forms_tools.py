@@ -76,13 +76,13 @@ def get_dmc_field_input(field, mm_object, disabled=False):
         if getattr(mm_object, field.name) is None
         else getattr(mm_object, field.name)
     )
-    input_field.w = "auto"
+    input_field.w = "100%"
     input_field.disabled = disabled
     input_field.required = not field_info["optional"]
     input_field.leftSection = DashIconify(
         icon=FIELD_TYPE_MAPPING[field_info["type"]][1]
     )
-    input_field.maxWidth = "450px"
+    input_field.mb = "sm"
 
     return input_field
 
