@@ -171,7 +171,7 @@ omero_project_dash.layout = dmc.MantineProvider(
                                     ),
                                     html.Div(
                                         id="graph-project",
-                                        style={"height": "250px"},
+                                        style={"height": "350px"},
                                         children=[
                                             dmc.LineChart(
                                                 id="line-chart",
