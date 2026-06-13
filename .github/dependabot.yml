@@ -1,0 +1,129 @@
+# Dependabot configuration
+# Reference: https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference
+#
+# Conventions applied to every ecosystem below:
+#   - cooldown: wait after a release before opening a PR, so new versions can stabilize
+#       (default 14d, major 45d, minor 14d, patch 7d).
+#   - groups: security updates and version updates are grouped separately (applies-to),
+#       and within each, major updates are kept apart from minor + patch updates
+#       (4 groups => at most: security-major, security-minor/patch, version-major,
+#        version-minor/patch PRs per ecosystem per run).
+#   - GitHub Actions are pinned to commit SHAs in the workflow files; Dependabot keeps
+#       the SHA and the trailing "# vX" version comment in sync.
+version: 2
+
+updates:
+  # ---- Python (pyproject.toml + poetry.lock) ----
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 10
+    cooldown:
+      default-days: 14
+      semver-major-days: 45
+      semver-minor-days: 14
+      semver-patch-days: 7
+    groups:
+      pip-security-minor-patch:
+        applies-to: security-updates
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+      pip-security-major:
+        applies-to: security-updates
+        patterns: ["*"]
+        update-types: ["major"]
+      pip-version-minor-patch:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+      pip-version-major:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: ["major"]
+
+  # ---- GitHub Actions (.github/workflows, pinned to SHAs) ----
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    cooldown:
+      default-days: 14
+      semver-major-days: 45
+      semver-minor-days: 14
+      semver-patch-days: 7
+    groups:
+      actions-security-minor-patch:
+        applies-to: security-updates
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+      actions-security-major:
+        applies-to: security-updates
+        patterns: ["*"]
+        update-types: ["major"]
+      actions-version-minor-patch:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+      actions-version-major:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: ["major"]
+
+  # ---- Dockerfiles (test OMERO images) ----
+  - package-ecosystem: "docker"
+    directories:
+      - "/test/omero-web"
+      - "/test/omero-server"
+    schedule:
+      interval: "monthly"
+    cooldown:
+      default-days: 14
+      semver-major-days: 45
+      semver-minor-days: 14
+      semver-patch-days: 7
+    groups:
+      docker-security-minor-patch:
+        applies-to: security-updates
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+      docker-security-major:
+        applies-to: security-updates
+        patterns: ["*"]
+        update-types: ["major"]
+      docker-version-minor-patch:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+      docker-version-major:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: ["major"]
+
+  # ---- Docker Compose (root docker-compose.yaml) ----
+  - package-ecosystem: "docker-compose"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    cooldown:
+      default-days: 14
+      semver-major-days: 45
+      semver-minor-days: 14
+      semver-patch-days: 7
+    groups:
+      compose-security-minor-patch:
+        applies-to: security-updates
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+      compose-security-major:
+        applies-to: security-updates
+        patterns: ["*"]
+        update-types: ["major"]
+      compose-version-minor-patch:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+      compose-version-major:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: ["major"]

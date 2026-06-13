@@ -16,16 +16,20 @@ on:
   schedule:
     - cron: '0 0 * * 0'
 
+permissions: {}
+
 jobs:
   test:
     name: Run integration tests against OMERO
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
     env:
       STAGE: app
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: Checkout omero-test-infra
-        uses: actions/checkout@master
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           repository: ome/omero-test-infra
           path: .omero
